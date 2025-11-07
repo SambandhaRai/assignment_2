@@ -55,6 +55,16 @@ abstract class BankAccount {
     }
     print("----------------------------------");
   }
+
+  // transaction history
+  final List<String> _transactionHistory = [];
+  void addTransaction(String record) {
+    _transactionHistory.add(record);
+  }
+
+  List<String> getTransactionHistory() {
+    return _transactionHistory;
+  }
 }
 
 // Savings Account
@@ -76,6 +86,7 @@ class SavingsAccount extends BankAccount implements InterestBearing {
   void deposit(double amount) {
     if (amount > 0) {
       updateBalance(_balance + amount);
+      addTransaction("Deposited: \$$amount\tBalance: \$$_balance");
       print("Deposited : \$$amount to Saving Account.");
     } else {
       print("Invalid Deposit Amount.");
@@ -93,6 +104,7 @@ class SavingsAccount extends BankAccount implements InterestBearing {
     }
 
     updateBalance(_balance - amount);
+    addTransaction("Withdrawn: \$$amount\tBalance: \$$_balance");
     _withdrawCount++;
     print("Withdrawn \$$amount from Saving Account.");
   }
@@ -119,6 +131,7 @@ class CheckingAccount extends BankAccount {
   void deposit(double amount) {
     if (amount > 0) {
       updateBalance(_balance + amount);
+      addTransaction("Deposited: \$$amount\tBalance: \$$_balance");
       print("Deposited : \$$amount to Checking Account.");
     } else {
       print("Invalid Deposit Amount.");
@@ -132,6 +145,7 @@ class CheckingAccount extends BankAccount {
     }
 
     updateBalance(_balance - amount);
+    addTransaction("Withdrawn: \$$amount\tBalance: \$$_balance");
     if (_balance < 0) {
       updateBalance(_balance - _overdraftFee);
       print("Overdraft fee of \$$_overdraftFee applied.");
@@ -162,6 +176,7 @@ class PremiumAccount extends BankAccount implements InterestBearing {
   void deposit(double amount) {
     if (amount > 0) {
       updateBalance(_balance + amount);
+      addTransaction("Deposited: \$$amount\tBalance: \$$_balance");
       print("Deposited : \$$amount to Premium Account.");
     } else {
       print("Invalid Deposit Amount.");
@@ -176,7 +191,43 @@ class PremiumAccount extends BankAccount implements InterestBearing {
     }
 
     updateBalance(_balance - amount);
+    addTransaction("Withdrawn: \$$amount\tBalance: \$$_balance");
     print("Withdrawn \$$amount from Premium Account.");
+  }
+}
+
+// Student Account
+class StudentAccount extends BankAccount {
+  final double _maxBalance = 5000;
+
+  StudentAccount({
+    required super.accountNumber,
+    required super.holderName,
+    required super.balance,
+  });
+
+  @override
+  void deposit(double amount) {
+    if (amount > 0 && _balance + amount <= _maxBalance) {
+      updateBalance(_balance + amount);
+      addTransaction("Deposited: \$$amount\tBalance: \$$_balance");
+      print("Deposited \$$amount to Student Account");
+    } else if (_balance + amount > _maxBalance || amount > _maxBalance) {
+      print("Cannot Deposit. Amount exceeds max balance of \$$_maxBalance.");
+    } else {
+      print("Invalid amount");
+    }
+  }
+
+  @override
+  void withdraw(double amount) {
+    if (amount > 0 && amount <= _balance) {
+      updateBalance(_balance - amount);
+      addTransaction("Withdrawn: \$$amount\tBalance: \$$_balance");
+      print("Withdrawn \$$amount from Student Account.");
+    } else {
+      print("Invalid withdrawal amount.");
+    }
   }
 }
 
@@ -232,6 +283,17 @@ class Bank {
     }
   }
 
+  // Calculate and Apply monthly interest
+  void applyMonthlyInterest() {
+    for (var account in accounts) {
+      if (account is InterestBearing) {
+        double interest = (account as InterestBearing).calculateInterest();
+        account.deposit(interest);
+        print("Applied \$$interest interest to $account");
+      }
+    }
+  }
+
   // Generate report of all accounts
   void generateReport() {
     print("\n========== BANK REPORT ==========");
@@ -265,11 +327,17 @@ void main() {
     holderName: 'Charlie',
     balance: 15000,
   );
+  BankAccount student = StudentAccount(
+    accountNumber: "STA1004",
+    holderName: "Dylan",
+    balance: 3500,
+  );
 
   // Add accounts to the bank
   bank.createAccount(savings);
   bank.createAccount(checking);
   bank.createAccount(premium);
+  bank.createAccount(student);
 
   print("\n--- Performing Transactions ---");
   savings.deposit(300); // Deposit to savings
@@ -280,9 +348,18 @@ void main() {
 
   premium.withdraw(2000); // Withdraw from premium account
 
+  print("\n--- Performing Transactions Student Account ---");
+  student.deposit(3000);
+  student.withdraw(200);
+
   print("\n--- Transferring Money ---");
   // Transfer money from Alice to Bob
   bank.transfer("SA1001", "CA1002", 100);
+
+  print("\n--- Transaction History for Alice ---");
+  for (var record in savings.getTransactionHistory()) {
+    print(record);
+  }
 
   print("\n--- Generating Bank Report ---");
 
