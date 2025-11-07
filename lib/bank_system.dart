@@ -49,6 +49,11 @@ abstract class BankAccount {
     print("Account Type: $runtimeType");
     print("Account Holder: $_holderName");
     print("Balance: \$$_balance");
+    // Only calculate interest for accounts that implement InterestBearing
+    if (this is InterestBearing) {
+      print("Interest: \$${(this as InterestBearing).calculateInterest()}");
+    }
+    print("----------------------------------");
   }
 }
 
@@ -237,11 +242,6 @@ class Bank {
 
     for (var acc in accounts) {
       acc.displayAccountInfo();
-      // Only calculate interest for accounts that implement InterestBearing
-      if (acc is InterestBearing) {
-        print("Interest: \$${(acc as InterestBearing).calculateInterest()}");
-      }
-      print("----------------------------------");
     }
   }
 }
